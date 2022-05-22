@@ -1,0 +1,101 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "polycode-backend.fullname" . }}
+  labels:
+    {{- include "polycode-backend.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "polycode-backend.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "polycode-backend.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "polycode-backend.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image }}"
+          env:
+            - name: DATABASE_HOST
+              value: {{ .Values.DATABASE_HOST }}
+            - name: DATABASE_DIALECT
+              value: {{ .Values.DATABASE_DIALECT }}
+            - name: DATABASE_PORT
+              value: {{ .Values.DATABASE_PORT | quote }}
+            - name: DATABASE_USERNAME
+              value: {{ .Values.DATABASE_USERNAME }}
+            - name: DATABASE_DB
+              value: {{ .Values.DATABASE_DB }}
+            - name: DATABASE_PASSWORD
+              value: {{ .Values.DATABASE_PASSWORD }}
+            - name: EMAIL_PROVIDER
+              value: {{ .Values.EMAIL_PROVIDER }}
+            - name: EMAIL_SES_SECRET
+              value: {{ .Values.EMAIL_SES_SECRET }}  
+            - name: EMAIL_SES_REGION
+              value: {{ .Values.EMAIL_SES_REGION }}
+            - name: EMAIL_SES_AKI
+              value: {{ .Values.EMAIL_SES_AKI }}
+            - name: RUNNER_PROVIDER
+              value: {{ .Values.RUNNER_PROVIDER }}
+            - name: RUNNER_TIMEOUT
+              value: {{ .Values.RUNNER_TIMEOUT | quote }}
+            - name: DOCKER_HOST
+              value: {{ .Values.DOCKER_HOST }}
+            # - name: REFRESH_PRIVATE_KEY
+            #   value: {{ .Values.REFRESH_PRIVATE_KEY }}
+            # - name: REFRESH_PUBLIC_KEY
+            #   value: {{ .Values.REFRESH_PUBLIC_KEY }}
+            # - name: ACCESS_PRIVATE_KEY
+            #   value: {{ .Values.ACCESS_PRIVATE_KEY }}
+            # - name: ACCESS_PUBLIC_KEY
+            #   value: {{ .Values.ACCESS_PRIVATE_KEY }}
+            - name: MONGO_HOST
+              value: {{ .Values.MONGO_HOST }}
+            - name: MONGO_USER
+              value: {{ .Values.MONGO_USER }}
+            - name: MONGO_PASSWORD
+              value: {{ .Values.MONGO_PASSWORD }}
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          # livenessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          # readinessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

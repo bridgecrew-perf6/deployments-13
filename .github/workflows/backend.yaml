@@ -1,0 +1,28 @@
+name: Deploy backend
+
+on:
+  repository_dispatch:
+    types: [deploy-backend]
+jobs:
+  build:
+    runs-on: self-hosted
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Decode kubeconfig file
+      run: |
+        echo "::set-output name=KUBECONFIG_DECODED::$('${{ secrets.KUBERNETES_CONFIG }}' | base64 --decode )"
+      id: kubeconfig
+
+    - name: Install helm
+      run: |
+        curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+        chmod 700 get_helm.sh
+        ./get_helm.sh
+
+    - name: Move kubeconfig file
+      run: echo "${{ secrets.KUBERNETES_CONFIG_DECODED }}" > ./kubeconfig
+
+    - name: Execute helm command
+      run: helm upgrade polycode-backend ./polycode-backend/polycode-backend --install --kubeconfig=./kubeconfig --set DATABASE_DIALECT=${{ secrets.DATABASE_DIALECT  }} --set DATABASE_PASSWORD=${{ secrets.DATABASE_PASSWORD  }} --set DATABASE_HOST=${{ secrets.DATABASE_HOST  }} --set DATABASE_PORT=${{ secrets.DATABASE_PORT  }} --set DATABASE_USERNAME=${{ secrets.DATABASE_USERNAME  }} --set DATABASE_DB=${{ secrets.DATABASE_DB  }}  --set EMAIL_PROVIDER=${{ secrets.EMAIL_PROVIDER  }} --set EMAIL_SES_SECRET=${{ secrets.EMAIL_SES_SECRET  }} --set EMAIL_SES_REGION=${{ secrets.EMAIL_SES_REGION  }} --set EMAIL_SES_AKI=${{ secrets.EMAIL_SES_AKI  }} --set RUNNER_PROVIDER=${{ secrets.RUNNER_PROVIDER  }} --set RUNNER_TIMEOUT=${{ secrets.RUNNER_TIMEOUT  }} --set MONGO_HOST=${{ secrets.MONGO_HOST  }} --set MONGO_USER=${{ secrets.MONGO_USER  }} --set MONGO_PASSWORD=${{ secrets.MONGO_PASSWORD  }}  --set DOCKER_HOST=${{ secrets.DOCKER_HOST  }}

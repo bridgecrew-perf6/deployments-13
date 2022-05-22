@@ -1,0 +1,14 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod-frontend
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: simon34280@simonlucido.com
+    privateKeySecretRef:
+      name: letsencrypt-prod-frontend-key
+    solvers:
+      - http01:
+          ingress:
+            class: nginx
