@@ -24,11 +24,23 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      volumes:
+      - name: runner-pvc
+        hostPath: 
+          path: /tmp/runner/tmp
+      - name: runner-pvc-app
+        hostPath: 
+          path: /tmp/runner/app
       serviceAccountName: {{ include "polycode-backend.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
         - name: {{ .Chart.Name }}
+          volumeMounts:
+            - name: runner-pvc
+              mountPath: /tmp
+            - name: runner-pvc-app
+              mountPath: /app
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image }}"
